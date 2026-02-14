@@ -1,0 +1,64 @@
+# Render Deployment Configuration
+# Reference: https://render.com/docs/infrastructure-as-code
+
+services:
+  - type: web
+    name: careops-api
+    runtime: python
+    pythonVersion: 3.11
+    
+    # Git configuration
+    repo: https://github.com/YOUR_USERNAME/careops
+    branch: main
+    
+    # Build and run commands
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn main:app --workers 4 --worker-class uvicorn.workers.UvicornWorker --bind 0.0.0.0:10000
+    
+    # Environment variables
+    envVars:
+      - key: DATABASE_URL
+        scope: build
+        sync: false
+      - key: JWT_SECRET
+        scope: build
+        sync: false
+      - key: SMTP_HOST
+        value: smtp.gmail.com
+      - key: SMTP_PORT
+        value: "587"
+      - key: SMTP_USER
+        scope: build
+        sync: false
+      - key: SMTP_PASSWORD
+        scope: build
+        sync: false
+      - key: TWILIO_ACCOUNT_SID
+        scope: build
+        sync: false
+      - key: TWILIO_AUTH_TOKEN
+        scope: build
+        sync: false
+      - key: TWILIO_PHONE_NUMBER
+        scope: build
+        sync: false
+      - key: FRONTEND_URL
+        value: https://careops.vercel.app
+    
+    # Disk configuration
+    disk:
+      name: careops-data
+      mountPath: /var/data
+      sizeGB: 1
+  
+  - type: pserv
+    name: careops-db
+    ipAllowList: [] # allow all for now
+    plan: free
+    postgresSQLVersion: 15
+
+# Database configuration (PostgreSQL)
+databases:
+  - name: careops_db
+    user: careops_user
+    plan: free
