@@ -36,9 +36,21 @@ app = FastAPI(
 )
 
 # CORS Configuration
+allowed_origins = [
+    "http://localhost:3000",
+    "http://localhost:3001",
+    "https://care-ops-xi.vercel.app",
+    "https://careops-six.vercel.app",
+]
+
+# Add FRONTEND_URL from env if set
+frontend_url = os.getenv("FRONTEND_URL", "").strip()
+if frontend_url:
+    allowed_origins.extend(frontend_url.split(","))
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=os.getenv("FRONTEND_URL", "http://localhost:3000").split(","),
+    allow_origins=allowed_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
