@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 import os
+import re
 from dotenv import load_dotenv
 
 # Load environment variables
@@ -35,24 +36,12 @@ app = FastAPI(
     lifespan=lifespan
 )
 
-# CORS Configuration
-allowed_origins = [
-    "http://localhost:3000",
-    "http://localhost:3001",
-    "https://care-ops-xi.vercel.app",
-    "https://careops-six.vercel.app",
-    "https://care-ops-fawn.vercel.app",
-    "https://care-fccej0ss4-klu-2200031088s-projects.vercel.app",
-]
-
-# Add FRONTEND_URL from env if set
-frontend_url = os.getenv("FRONTEND_URL", "").strip()
-if frontend_url:
-    allowed_origins.extend([url.strip() for url in frontend_url.split(",")])
+# CORS Configuration - Accept all Vercel preview deployments, localhost, and env-configured origins
+cors_regex = r"https://.*\.vercel\.app|http://localhost:\d+"
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=allowed_origins,
+    allow_origin_regex=cors_regex,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
