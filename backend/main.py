@@ -41,12 +41,14 @@ allowed_origins = [
     "http://localhost:3001",
     "https://care-ops-xi.vercel.app",
     "https://careops-six.vercel.app",
+    "https://care-ops-fawn.vercel.app",
+    "https://care-fccej0ss4-klu-2200031088s-projects.vercel.app",
 ]
 
 # Add FRONTEND_URL from env if set
 frontend_url = os.getenv("FRONTEND_URL", "").strip()
 if frontend_url:
-    allowed_origins.extend(frontend_url.split(","))
+    allowed_origins.extend([url.strip() for url in frontend_url.split(",")])
 
 app.add_middleware(
     CORSMiddleware,
