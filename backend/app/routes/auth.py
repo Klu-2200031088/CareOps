@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from app.database import get_db
 from app.models.models import User
-from app.schemas.schemas import UserCreate, UserResponse, Token, SMSVerificationRequest
+from app.schemas.schemas import UserCreate, UserResponse, Token, SMSVerificationRequest, LoginRequest
 from app.services.auth_service import get_password_hash, verify_password, create_access_token
 from app.integrations.sms_service import sms_service
 from datetime import timedelta, datetime
@@ -128,11 +128,30 @@ def resend_sms(email: str, db: Session = Depends(get_db)):
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=500, detail=f"Resend failed: {str(e)}")
-    if not user or not verify_password(password, user.hashed_password):
-        raise HTTPException(status_code=401, detail="Invalid credentials")
-    
-    access_token = create_access_token(data={"sub": str(user.id), "email": user.email})
-    return {"access_token": access_token, "token_type": "bearer"}
+
+@router.post("/login", response_model=Token)
+def login(request: LoginRequest, db: Session = Depends(get_db)):
+    """Login user with email and password"""
+    try:
+        user = db.query(User).filter(User.email == request.email).first()
+        if not user or not verify_password(request.password, user.hashed_password):
+            raise HTTPException(status_code=401, detail="Invalid email or password")
+        
+        # Create access token
+        access_token = create_access_token(
+            data={"sub": str(user.id), "email": user.email},
+            expires_delta=timedelta(hours=24)
+        )
+        
+        return {
+            "access_token": access_token,
+            "token_type": "bearer"
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Login error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Login failed")
 
 @router.get("/me", response_model=UserResponse)
 def get_current_user(token: str, db: Session = Depends(get_db)):
