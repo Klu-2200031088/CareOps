@@ -1,14 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { useSearchParams } from 'next/navigation';
-import { contactsApi, bookingsApi } from '@/services/api';
-import { useState as useStateHook } from 'react';
 
 export default function PublicBookingPage() {
-  const searchParams = useSearchParams();
-  const workspaceId = searchParams.get('workspace');
-
   const [step, setStep] = useState(1); // 1: contact info, 2: booking selection, 3: confirmation
   const [contactInfo, setContactInfo] = useState({ name: '', email: '', phone: '' });
   const [bookingType, setBookingType] = useState('');

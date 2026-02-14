@@ -3,13 +3,12 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore, useWorkspaceStore } from '@/services/store';
-import { workspaceApi, bookingsApi, inboxApi, contactsApi } from '@/services/api';
-import { format } from 'date-fns';
+import { workspaceApi, bookingsApi, contactsApi } from '@/services/api';
 
 export default function WorkspaceSetupPage() {
   const { token } = useAuthStore();
   const { currentWorkspace, setWorkspace } = useWorkspaceStore();
-  const [step, setStep] = useState(1); // 1: setup, 2: preview
+  const [step, setStep] = useState(1);
   const [bookingTypes, setBookingTypes] = useState<any[]>([]);
   const [newBooking, setNewBooking] = useState({ booking_type: '', duration_minutes: 60 });
   const [contacts, setContacts] = useState<any[]>([]);
@@ -29,7 +28,6 @@ export default function WorkspaceSetupPage() {
     try {
       const contactsRes = await contactsApi.list(token!, currentWorkspace.id);
       setContacts(contactsRes.data);
-
       const bookingsRes = await bookingsApi.list(token!, currentWorkspace.id);
       setBookingTypes(bookingsRes.data);
     } catch (error) {
@@ -40,25 +38,18 @@ export default function WorkspaceSetupPage() {
   const handleAddBooking = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newBooking.booking_type.trim()) return;
-
     setLoading(true);
     try {
-      // Create a dummy contact first
       const contactRes = await contactsApi.create(token!, currentWorkspace.id, {
         name: 'Booking Type Demo',
         email: 'demo@example.com'
       });
-
       const bookingRes = await bookingsApi.create(
         token!,
         currentWorkspace.id,
         contactRes.data.id,
-        {
-          ...newBooking,
-          scheduled_at: new Date().toISOString()
-        }
+        { ...newBooking, scheduled_at: new Date().toISOString() }
       );
-
       setBookingTypes([...bookingTypes, bookingRes.data]);
       setNewBooking({ booking_type: '', duration_minutes: 60 });
     } catch (error) {
@@ -71,7 +62,6 @@ export default function WorkspaceSetupPage() {
   const handleAddContact = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-
     try {
       const res = await contactsApi.create(token!, currentWorkspace.id, newContact);
       setContacts([...contacts, res.data]);
@@ -93,7 +83,9 @@ export default function WorkspaceSetupPage() {
     }
   };
 
-  if (!currentWorkspace) return <div className="p-8">Loading...</div>;
+  if (!currentWorkspace) {
+    return <div className="p-8">Loading...</div>;
+  }
 
   return (
     <div className="p-8 bg-gray-50 min-h-screen">
@@ -104,17 +96,13 @@ export default function WorkspaceSetupPage() {
         <div className="flex gap-4 mb-8">
           <button
             onClick={() => setStep(1)}
-            className={`px-4 py-2 rounded-md font-medium ${
-              step === 1 ? 'bg-blue-600 text-white' : 'bg-white text-gray-700 border'
-            }`}
+            className={`px-4 py-2 rounded-md font-medium ${step === 1 ? 'bg-blue-600 text-white' : 'bg-white text-gray-700 border'}`}
           >
             Setup
           </button>
           <button
             onClick={() => setStep(2)}
-            className={`px-4 py-2 rounded-md font-medium ${
-              step === 2 ? 'bg-blue-600 text-white' : 'bg-white text-gray-700 border'
-            }`}
+            className={`px-4 py-2 rounded-md font-medium ${step === 2 ? 'bg-blue-600 text-white' : 'bg-white text-gray-700 border'}`}
           >
             Preview
           </button>
@@ -122,7 +110,6 @@ export default function WorkspaceSetupPage() {
 
         {step === 1 ? (
           <div className="space-y-6">
-            {/* Add Booking Types */}
             <div className="bg-white rounded-lg shadow p-6">
               <h2 className="text-xl font-bold mb-4">📅 Booking Types</h2>
               <form onSubmit={handleAddBooking} className="space-y-4">
@@ -151,7 +138,6 @@ export default function WorkspaceSetupPage() {
                   </button>
                 </div>
               </form>
-
               <div className="mt-4 space-y-2">
                 {bookingTypes.map((bt) => (
                   <div key={bt.id} className="p-3 bg-gray-100 rounded-md">
@@ -162,7 +148,6 @@ export default function WorkspaceSetupPage() {
               </div>
             </div>
 
-            {/* Add Contacts */}
             <div className="bg-white rounded-lg shadow p-6">
               <h2 className="text-xl font-bold mb-4">👥 Contacts</h2>
               <form onSubmit={handleAddContact} className="space-y-4 mb-4">
@@ -198,7 +183,6 @@ export default function WorkspaceSetupPage() {
                   </button>
                 </div>
               </form>
-
               <div className="space-y-2">
                 {contacts.map((contact) => (
                   <div key={contact.id} className="p-3 bg-gray-100 rounded-md">
@@ -218,25 +202,25 @@ export default function WorkspaceSetupPage() {
                 <p className="text-lg font-semibold">{currentWorkspace.name}</p>
               </div>
               <div>
-                <p className="text-gray-600 text-sm">Address</p>
-                <p className="text-lg font-semibold">{currentWorkspace.address}</p>
-              </div>
-              <div>
-                <p className="text-gray-600 text-sm">Timezone</p>
-                <p className="text-lg font-semibold">{currentWorkspace.timezone}</p>
+                <p className="text-gray-600 text-sm">Status</p>
+                <p className="text-lg font-semibold">{currentWorkspace.is_active ? '✅ Active' : '⏳ Inactive'}</p>
               </div>
               <div>
                 <p className="text-gray-600 text-sm">Booking Types</p>
                 <p className="text-lg font-semibold">{bookingTypes.length}</p>
+              </div>
+              <div>
+                <p className="text-gray-600 text-sm">Contacts</p>
+                <p className="text-lg font-semibold">{contacts.length}</p>
               </div>
             </div>
 
             <div className="mb-6">
               <p className="text-gray-600 text-sm mb-2">✅ Setup Progress</p>
               <ul className="space-y-2 text-sm">
-                <li className={bookingTypes.length > 0 ? '✅ Booking types configured' : '⏳ Add booking types'}</li>
+                <li>{bookingTypes.length > 0 ? '✅ Booking types configured' : '⏳ Add booking types'}</li>
                 <li>{contacts.length > 0 ? '✅ Test contacts created' : '⏳ Add test contacts'}</li>
-                <li>⏳ Email integration configured</li>
+                <li>⏳ Email integration ready</li>
               </ul>
             </div>
 
